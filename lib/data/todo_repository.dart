@@ -32,12 +32,14 @@ class TodoRepository {
     ''');
   }
 
+  //Add todo item
   Future<int> addTodo(Todo todo) async {
     final db = await instance.database;
     return await db.insert('todos', todo.toMap(),
         conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
+  // Get todo list
   Future<List<Todo>> getTodos() async {
     final db = await instance.database;
     final List<Map<String, dynamic>> maps = await db.query('todos');
@@ -46,14 +48,27 @@ class TodoRepository {
     });
   }
 
+  // Update todo item
   Future<int> updateTodo(Todo todo) async {
     final db = await instance.database;
     return await db
         .update('todos', todo.toMap(), where: 'id = ?', whereArgs: [todo.id]);
   }
 
+  // delet todo item
   Future<int> deleteTodo(int id) async {
     final db = await instance.database;
     return await db.delete('todos', where: 'id = ?', whereArgs: [id]);
+  }
+
+  // Search todos by title
+  Future<List<Todo>> searchTodos(String query) async {
+    final db = await instance.database;
+    final result = await db.query(
+      'todos',
+      where: 'title LIKE ?',
+      whereArgs: ['%$query%'],
+    );
+    return result.map((json) => Todo.fromMap(json)).toList();
   }
 }

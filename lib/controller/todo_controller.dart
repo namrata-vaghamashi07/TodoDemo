@@ -5,6 +5,7 @@ import 'dart:async';
 import 'package:get/get.dart';
 import 'package:todo_demo/data/todo_model.dart';
 import 'package:todo_demo/data/todo_repository.dart';
+import 'package:todo_demo/utils/string_constants/string_constants.dart';
 
 class TodoController extends GetxController {
   final TodoRepository todoRepository = TodoRepository.instance;
@@ -16,6 +17,7 @@ class TodoController extends GetxController {
   RxBool isPaused = false.obs;
   RxBool isRunning = false.obs;
   RxString todoStatusUpdate = ''.obs;
+  var searchQuery = ''.obs;
 
   @override
   void onInit() {
@@ -26,7 +28,12 @@ class TodoController extends GetxController {
   // Get todo list
   void loadTodos() async {
     isLoading.value = true;
-    todoList.value = await todoRepository.getTodos();
+    if (searchQuery.value.isEmpty) {
+      todoList.value = await todoRepository.getTodos();
+    } else {
+      todoList.value = await todoRepository.searchTodos(searchQuery.value);
+    }
+
     isLoading.value = false;
   }
 
@@ -64,7 +71,7 @@ class TodoController extends GetxController {
 
     minutes.value = int.parse(parts[0]);
     seconds.value = int.parse(parts[1]);
-    todoStatusUpdate.value = 'In-Progress';
+    todoStatusUpdate.value = StringConstants.inProgress;
     if (!isRunning.value) {
       isRunning.value = true;
       isPaused.value = false;
@@ -102,7 +109,7 @@ class TodoController extends GetxController {
 
   // Resume the timer after pause
   void resumeTimer(int id) {
-    todoStatusUpdate.value = 'In-Progress';
+    todoStatusUpdate.value = StringConstants.inProgress;
     if (!isRunning.value && isPaused.value) {
       isRunning.value = true;
       isPaused.value = false;
@@ -130,7 +137,7 @@ class TodoController extends GetxController {
   void stopTimer(int id) {
     _timer?.cancel();
     var timerString = timerFormat(minutes.value, seconds.value);
-    todoStatusUpdate.value = 'Done';
+    todoStatusUpdate.value = StringConstants.done;
     updateTodoStatus(id, todoStatusUpdate.value, timerString);
     isRunning.value = false;
     isPaused.value = false;

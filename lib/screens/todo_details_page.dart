@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:todo_demo/data/todo_model.dart';
-import 'package:todo_demo/screens/add_edit_todo_bottomsheet.dart';
 import 'package:todo_demo/utils/binding/binding.dart';
 import 'package:todo_demo/utils/color_constants/color_constants.dart';
 import 'package:todo_demo/utils/string_constants/string_constants.dart';
+import 'package:todo_demo/utils/widgets/add_bottom_sheet.dart';
+import 'package:todo_demo/utils/widgets/timer_control_button.dart';
 import 'package:todo_demo/utils/widgets/todo_appbar.dart';
+import 'package:todo_demo/utils/widgets/todo_chip_status.dart';
+import 'package:todo_demo/utils/widgets/todo_sized_box.dart';
 import 'package:todo_demo/utils/widgets/todo_text_widget.dart';
 
 class TodoDetailPage extends StatefulWidget {
@@ -27,16 +30,15 @@ class _TodoDetailPageState extends State<TodoDetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: ColorConstants.whiteColor,
-      appBar: TodoAppbar(
-        title: StringConstants.todoDetail,
-        leading: IconButton(
-            onPressed: () => Get.back(),
-            icon:
-                const Icon(Icons.arrow_back, color: ColorConstants.whiteColor)),
-      ),
-      body: Obx(
-        () => Padding(
+        backgroundColor: ColorConstants.whiteColor,
+        appBar: TodoAppbar(
+          title: StringConstants.todoDetail,
+          leading: IconButton(
+              onPressed: () => Get.back(),
+              icon: const Icon(Icons.arrow_back,
+                  color: ColorConstants.whiteColor)),
+        ),
+        body: Padding(
           padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
           child: SingleChildScrollView(
             child: Container(
@@ -60,143 +62,108 @@ class _TodoDetailPageState extends State<TodoDetailPage> {
                   children: [
                     TodoTextWidget(
                       title: StringConstants.title.toUpperCase(),
-                      fontSize: 24,
+                      fontSize: 20,
                       fontWeight: FontWeight.bold,
                       color: ColorConstants.blackColor,
                     ),
+                    const TodoSizedBox(width: 5),
                     TodoTextWidget(
                       title: widget.todo.title.toUpperCase(),
-                      fontSize: 24,
+                      fontSize: 18,
                       fontWeight: FontWeight.w600,
                       color: ColorConstants.greyColor,
                     ),
-                    const SizedBox(height: 10),
+                    const TodoSizedBox(height: 20),
                     TodoTextWidget(
                       title: StringConstants.description.toUpperCase(),
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: ColorConstants.blackColor,
                     ),
+                    const TodoSizedBox(width: 5),
                     TodoTextWidget(
                       title: widget.todo.description,
-                      fontSize: 18,
-                      color: ColorConstants.greyColor,
-                    ),
-                    const SizedBox(height: 10),
-                    TodoTextWidget(
-                      title: StringConstants.status.toUpperCase(),
                       fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: ColorConstants.blackColor,
-                    ),
-                    TodoTextWidget(
-                      title: kTodoController.todoStatusUpdate.value,
-                      fontSize: 18,
                       fontWeight: FontWeight.w500,
                       color: ColorConstants.greyColor,
                     ),
-                    const SizedBox(height: 10),
+                    const TodoSizedBox(height: 20),
+                    TodoTextWidget(
+                      title: StringConstants.status.toUpperCase(),
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: ColorConstants.blackColor,
+                    ),
+                    const TodoSizedBox(width: 10),
+                    Obx(
+                      () => TodoChipStatus(
+                          backgroundColor: ColorConstants.whiteColor,
+                          label: kTodoController.todoStatusUpdate.value,
+                          labelPadding: const EdgeInsets.symmetric(
+                              vertical: 0, horizontal: 8),
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          textColor: ColorConstants.greyColor),
+                    ),
+                    const TodoSizedBox(height: 20),
                     TodoTextWidget(
                       title: StringConstants.timer.toUpperCase(),
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                       color: ColorConstants.blackColor,
                     ),
-                    TodoTextWidget(
-                      title: kTodoController.timerFormat(
-                          kTodoController.minutes.value,
-                          kTodoController.seconds.value),
-                      fontSize: 18,
-                      fontWeight: FontWeight.w500,
-                      color: ColorConstants.greyColor,
+                    const TodoSizedBox(width: 5),
+                    Obx(
+                      () => TodoTextWidget(
+                        title: kTodoController.timerFormat(
+                            kTodoController.minutes.value,
+                            kTodoController.seconds.value),
+                        fontSize: 16,
+                        fontWeight: FontWeight.w500,
+                        color: ColorConstants.greyColor,
+                      ),
                     ),
-                    const SizedBox(height: 20),
-                    widget.todo.status == 'Done'
-                        ? const SizedBox()
-                        : _buildTimerControls(),
+                    const TodoSizedBox(height: 20),
+                    widget.todo.status == StringConstants.done
+                        ? const TodoSizedBox()
+                        : Obx(() => _buildTimerControls()),
                   ],
                 ),
               ),
             ),
           ),
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: ColorConstants.blueColor,
-        child: const Icon(
-          Icons.edit,
-          color: ColorConstants.whiteColor,
-        ),
-        onPressed: () => showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          builder: (_) => Padding(
-            padding: EdgeInsets.only(
-              bottom: MediaQuery.of(context).viewInsets.bottom,
-            ),
-            child: AddEditTodoBottomSheet(todo: widget.todo),
-          ),
-        ),
-      ),
-    );
+        floatingActionButton:
+            FloatingActionButtonWithBottomSheet(todo: widget.todo));
   }
 
   Widget _buildTimerControls() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-                color: ColorConstants.greyColor.withOpacity(0.5)),
-            child: IconButton(
-              key: ValueKey(kTodoController.isRunning.value),
-              icon: Icon(
-                (widget.todo.status == 'In-Progress' &&
-                        kTodoController.isRunning.value &&
-                        !kTodoController.isPaused.value)
-                    ? Icons.pause
-                    : Icons.play_arrow,
-                size: 30,
-                color: ColorConstants.blackColor,
-              ),
-              onPressed: () {
-                if (kTodoController.isRunning.value) {
-                  kTodoController.pauseTimer(widget.todo.id!);
-                } else if (kTodoController.isPaused.value) {
-                  kTodoController.resumeTimer(widget.todo.id!);
-                } else {
-                  kTodoController.startTimer(
-                      widget.todo.timer, widget.todo.id!);
-                }
-              },
-            ),
-          ),
-        ),
-        const SizedBox(width: 10),
-        AnimatedSwitcher(
-          duration: const Duration(milliseconds: 300),
-          child: Container(
-            padding: const EdgeInsets.all(4),
-            decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(100),
-                color: ColorConstants.greyColor.withOpacity(0.5)),
-            child: IconButton(
-              key: ValueKey(kTodoController.isRunning.value),
-              icon: const Icon(
-                Icons.stop,
-                size: 30,
-                color: ColorConstants.blackColor,
-              ),
-              onPressed: () {
-                kTodoController.stopTimer(widget.todo.id!);
-              },
-            ),
-          ),
-        ),
+        TimerControlButton(
+            onPressed: () {
+              if (kTodoController.isRunning.value) {
+                kTodoController.pauseTimer(widget.todo.id!);
+              } else if (kTodoController.isPaused.value) {
+                kTodoController.resumeTimer(widget.todo.id!);
+              } else {
+                kTodoController.startTimer(widget.todo.timer, widget.todo.id!);
+              }
+            },
+            valueKey: kTodoController.isRunning.value,
+            icon: (widget.todo.status == StringConstants.inProgress &&
+                    kTodoController.isRunning.value &&
+                    !kTodoController.isPaused.value)
+                ? Icons.pause
+                : Icons.play_arrow),
+        const TodoSizedBox(width: 10),
+        TimerControlButton(
+            onPressed: () {
+              kTodoController.stopTimer(widget.todo.id!);
+            },
+            valueKey: kTodoController.isRunning.value,
+            icon: Icons.stop),
       ],
     );
   }

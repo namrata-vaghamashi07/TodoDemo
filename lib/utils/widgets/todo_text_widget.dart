@@ -7,16 +7,22 @@ class TodoTextWidget extends StatelessWidget {
       required this.title,
       this.fontSize,
       this.fontWeight,
-      this.color});
+      this.color,
+      this.maxLines,
+      this.overflow});
   final String title;
   final double? fontSize;
   final FontWeight? fontWeight;
   final Color? color;
+  final int? maxLines;
+  final TextOverflow? overflow;
 
   @override
   Widget build(BuildContext context) {
     return Text(
       title,
+      maxLines: maxLines,
+      overflow: overflow,
       style: TextStyle(
           fontSize: fontSize ?? 12,
           fontWeight: fontWeight ?? FontWeight.w400,

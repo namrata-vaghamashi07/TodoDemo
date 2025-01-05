@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:todo_demo/screens/todo_list_page.dart';
 import 'package:todo_demo/utils/binding/binding.dart';
-import 'package:todo_demo/utils/widgets/todo_text_widget.dart';
+import 'package:todo_demo/utils/color_constants/color_constants.dart';
+import 'package:todo_demo/utils/string_constants/string_constants.dart';
+import 'package:todo_demo/utils/widgets/todo_elevated_button.dart';
+import 'package:todo_demo/utils/widgets/todo_sized_box.dart';
+import 'package:todo_demo/utils/widgets/todo_textfield.dart';
 import '../data/todo_model.dart';
 
 class AddEditTodoBottomSheet extends StatefulWidget {
@@ -32,133 +37,130 @@ class AddEditTodoBottomSheetState extends State<AddEditTodoBottomSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16.0),
+      padding: const EdgeInsets.all(20),
       child: SingleChildScrollView(
         child: Form(
           key: formKey,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              TextFormField(
+              TodoTextFormField(
                 controller: titleController,
-                decoration: const InputDecoration(labelText: 'Title'),
+                labelText: StringConstants.title,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a title';
+                    return StringConstants.titleErrorMsg;
                   }
                   return null;
                 },
               ),
-              const SizedBox(height: 16),
-              TextFormField(
+
+              const TodoSizedBox(height: 20),
+              TodoTextFormField(
                 controller: descriptionController,
-                decoration: InputDecoration(labelText: 'Description'),
+                labelText: StringConstants.description,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a description';
+                    return StringConstants.descriptionErrorMsg;
                   }
                   return null;
                 },
               ),
-              SizedBox(height: 16),
+
+              const TodoSizedBox(height: 20),
 
               // Time field (MM:SS)
-              TextFormField(
+              TodoTextFormField(
                 controller: timeController,
-                // keyboardType: TextInputType.number,
-                decoration: const InputDecoration(
-                  labelText: 'Time (MM:SS)',
-                  helperText: 'Max: 5 minutes',
-                ),
+                labelText: StringConstants.timerLable,
+                helperText: StringConstants.max5min,
                 validator: (value) {
                   if (value == null || value.isEmpty) {
-                    return 'Please enter a time';
+                    return StringConstants.enterTimeMsg;
                   }
                   // Validate the MM:SS format
                   final timeParts = value.split(":");
                   if (timeParts.length != 2) {
-                    return 'Invalid time format. Use MM:SS';
+                    return StringConstants.invalidTimeMsg;
                   }
 
                   final minutes = int.tryParse(timeParts[0]);
                   final seconds = int.tryParse(timeParts[1]);
 
                   if (minutes == null || seconds == null) {
-                    return 'Invalid number format in time';
+                    return StringConstants.invalidNumber;
                   }
 
                   if (minutes < 0 || minutes > 5) {
-                    return 'Minutes should be between 0 and 5';
+                    return StringConstants.minuteMsg;
                   }
 
                   if (seconds < 0 || seconds >= 60) {
-                    return 'Seconds should be between 0 and 59';
+                    return StringConstants.secoundMsg;
                   }
 
                   return null;
                 },
               ),
-              const SizedBox(height: 24),
+              const TodoSizedBox(height: 24),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  Expanded(
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.grey),
-                      onPressed: () => Get.back(), // Close without saving
-                      child: const TodoTextWidget(
-                        title: 'Cancel',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                  TodoElevatedButton(
+                    title: StringConstants.cancel,
+                    onPressed: () => Get.back(),
+                    fontSize: 16,
+                    backgroundColor: ColorConstants.whiteColor,
+                    fontWeight: FontWeight.w500,
+                    textColor: ColorConstants.blackColor.withOpacity(0.8),
                   ),
-                  Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        if (formKey.currentState!.validate()) {
-                          final String title = titleController.text.trim();
-                          final String description =
-                              descriptionController.text.trim();
+                  const TodoSizedBox(width: 10),
+                  TodoElevatedButton(
+                    title: widget.todo != null
+                        ? StringConstants.update
+                        : StringConstants.save,
+                    onPressed: () {
+                      if (formKey.currentState!.validate()) {
+                        final String title = titleController.text.trim();
+                        final String description =
+                            descriptionController.text.trim();
 
-                          // Convert minutes to Duration object
-                          final timeString = timeController.text.trim();
-                          final timeParts = timeString.split(":");
-                          final minutes = int.parse(timeParts[0]);
-                          final seconds = int.parse(timeParts[1]);
-                          var totalSeconds =
-                              kTodoController.timerFormat(minutes, seconds);
+                        // Convert minutes to Duration object
+                        final timeString = timeController.text.trim();
+                        final timeParts = timeString.split(":");
+                        final minutes = int.parse(timeParts[0]);
+                        final seconds = int.parse(timeParts[1]);
+                        var totalSeconds =
+                            kTodoController.timerFormat(minutes, seconds);
 
-                          if (widget.todo == null) {
-                            // Add a new todo item
-                            final Todo newTodo = Todo(
-                              title: title,
-                              description: description,
-                              status: widget.todo?.status ?? 'TODO',
-                              timer: totalSeconds,
-                            );
-                            kTodoController.addTodo(newTodo);
-                          } else {
-                            // Update todo item
-                            final Todo newTodo = Todo(
-                              id: widget.todo!.id,
-                              title: title,
-                              description: description,
-                              status: widget.todo?.status ?? 'TODO',
-                              timer: totalSeconds,
-                            );
-                            kTodoController.updateTodo(newTodo);
-                          }
-                          Get.back();
+                        if (widget.todo == null) {
+                          // Add a new todo item
+                          final Todo newTodo = Todo(
+                            title: title,
+                            description: description,
+                            status: widget.todo?.status ?? StringConstants.todo,
+                            timer: totalSeconds,
+                          );
+                          kTodoController.addTodo(newTodo);
+                        } else {
+                          // Update todo item
+                          final Todo newTodo = Todo(
+                            id: widget.todo!.id,
+                            title: title,
+                            description: description,
+                            status: widget.todo?.status ?? StringConstants.todo,
+                            timer: totalSeconds,
+                          );
+                          kTodoController.updateTodo(newTodo);
                         }
-                      },
-                      child: TodoTextWidget(
-                        title: widget.todo != null ? 'Update' : 'Save',
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                        Get.offAll(() => const TodoListPage());
+                      }
+                    },
+                    fontSize: 16,
+                    borderColor: ColorConstants.blueColor,
+                    backgroundColor: ColorConstants.blueColor,
+                    textColor: ColorConstants.whiteColor,
+                    fontWeight: FontWeight.w500,
                   ),
                 ],
               ),
